@@ -6,8 +6,18 @@ main.c - program that make result vector from matrix. Every element in vector = 
 
 
 Example of IN file
+
+
         3 2 4
+        
+        
         2 2 5
+        
+        
         1 1 1
+        
+        
 Example of OUT file
+
+
         3 3 1
