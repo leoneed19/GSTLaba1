@@ -1,11 +1,18 @@
 # GSTLaba1
-generate.c - file to generate matrix N*M
+generator.c - file to generate matrix X mb
+
+TO COMPILE generator.c you should use in terminal:
+
+cc generator.c -lm -o gen
+
+TO RUN it use in terminal: 
+
+./gen
+
+main.c - program that make result vector from matrix. Every element in vector includes AVG of all elements in each row.
 
 
-main.c - program that make result vector from matrix. Every element in vector = AVG of all elements in each row.
-
-
-Example of IN file
+Example of "input.txt" file
 
 
         3 2 4
@@ -15,7 +22,7 @@ Example of IN file
         1 1 1
         
         
-Example of OUT file
+Example of "output.txt" file
 
 
         3 3 1
