@@ -1,122 +1,108 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/*
-int N;
-int M;
-struct StructMatrix {
-    int A[N][M];
-    int N;
-    int M;
-};*/
-// Чтение из файла
-int * readFromFile(N, M) {
-    FILE *ptrfile;
-    //printf("Использовали файл: %s", argv[1]);
-    //printf("\n");
-    int i,j,k;
-    char file_name[255] = "../IN.txt";
-    k = 0;
-    int s;
-    int B[N][M];
-    //int** p = (int **) A;
-    ptrfile = fopen(file_name, "r+");
-    //printf(ptrfile);
-    while ((fscanf(ptrfile, "%d", &s) != EOF)) {
-        if (!ptrfile)
+#include <time.h>
+#include <math.h>
+
+
+struct MyStruct {
+    int m;
+    int n;
+    int *res;
+};
+
+
+void writeToFile(int *arrayOfAvg, long int time, int M) {
+    int i;
+    FILE *writeFile;
+    writeFile = fopen("../output.txt", "w");
+    for (i = 0; i < M; i++) {
+        fprintf(writeFile, "%d", arrayOfAvg[i]);
+        fprintf(writeFile, "%s", "\t");
+        // printf("%d ", arrayOfAvg[i]);
+        // printf("\t");
+    }
+    fprintf(writeFile, "\n");
+    fprintf(writeFile, "%li ", time);
+    fprintf(writeFile, "\n");
+    fclose(writeFile);
+}
+
+
+struct MyStruct readFromFile() {
+    int n = 0, s, k = 0;
+    int iterations = 0;
+
+    struct MyStruct result;
+
+    FILE *myFile;
+    myFile = fopen("../input.txt", "r");
+
+    int *Res;
+
+    while ((fscanf(myFile, "%d", &s) != EOF)) {
+        if (!myFile)
             break;
         k += 1;
     }
-    int *A = (int *) malloc(k * sizeof(int));
-    rewind(ptrfile);
-    for (int i = 0; i < k; i++) {
-        fscanf(ptrfile, "%d", &A[i]);
-        printf("c[%d]=%d  ", i, A[i]);
-        printf("\n");
-    }
-    /*int x = M;
-    for (i = 0; i < N; i++ ) {
-        for (j = 0; j < M; j++) {
-            B[i][j] = A[x*i+j];
-            printf("%d ", B[i][j]);
-            printf("c[%d]=%d  ", i, B[i][j]);
-        }
-        printf("\n");
-    }*/
-  //  int* ptr = (int *) &A;
 
-    return A;
+    Res = (int *) malloc(k * sizeof(int));
+    rewind(myFile);
+    for (int i = 0; i < k; i++) {
+        if (iterations == 0) {
+            fscanf(myFile, "%d", &result.m);
+            iterations++;
+        }
+        if (iterations == 1) {
+            fscanf(myFile, "%d", &result.n);
+            iterations++;
+        }
+        fscanf(myFile, "%d", &Res[i]);
+        // printf("c[%d]=%d  ", i, Res[i]);
+        // printf("\t");
+    }
+    printf("\n");
+    result.res = Res;
+    fclose(myFile);
+    return result;
 }
 
 
 int main() {
-    //FILE *myfile;
-    int N,M,i,j;
+    int N, M, i, j, summ, avg;
+    struct MyStruct result = readFromFile();
+    int *res;
 
-    N = 100;
-    M = 50;
-  /*  scanf("%d",&N);
-    scanf("%d",&M);*/
-    //int A[N][M];
-    int B[N][M];
-    int Res[N];
-    int *ptr;
-    ptr = readFromFile(N, M);
-   /* for (i = 0; i < N; i++ ) {
-        for (j = 0; j < M; j++) {
-            A[i][j] = 10 + rand() % (20 - 10 + 1);
-            printf("%d ", A[i][j]);
-        }
-        printf("\n");
-    }
+
+    N = result.n;
+    M = result.m;
+    res = result.res;
+    printf("%d", N);
     printf("\n");
-*/
-    int *A = ptr;
+    printf("%d", M);
 
-    int x = M;
-    for (i = 0; i < N; i++ ) {
-        for (j = 0; j < M; j++) {
-            B[i][j] = A[x*i+j];
-            printf("%d ", B[i][j]);
-            printf("c[%d]=%d  ", M*i+j, B[i][j]);
+    int *arrayOfAvg = (int *) malloc(M * sizeof(int));
+
+    struct timespec mt1, mt2;
+    long int tt;
+
+    // Основной код
+    clock_gettime(CLOCK_REALTIME, &mt1);
+    for (i = 0; i < M; i++) {
+        summ = 0;
+        for (j = 0; j < N; j++) {
+            summ = summ + res[i * N + j];
         }
-        printf("\n");
+        avg = summ / N;
+        arrayOfAvg[i] = avg;
     }
-   
-   for (i = 0; i < N; i++) {
-        int summ = 0;
-        for (j = 0; j < M; j++) {
-            summ =  summ + B[i][j];
-        }
-        //Формирование результрующего массива как среднего по каждой строке
-        Res[i] = summ / M;
-    }
+    clock_gettime(CLOCK_REALTIME, &mt2);
 
-    printf("%s ","Res");
-    for (i = 0; i < N; i++ ) {
-        //for (j = 0; j < M; j++) {
-        //A[i][j] = 10 + rand() % (20 - 10 + 1);
-        printf("%d ", Res[i]);
+    tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
 
+    printf("\n");
 
-        //}
-        printf("\t");
-    }
-
-
-    FILE *file;
-    if ((file=fopen("../OUT.txt","w"))==NULL) {
-        printf("Невозможно открыть файл\n");
-        exit(1);
-    };
-
-    for (i = 0; i < N; i++) {
-        fprintf(file, "%i ", Res[i]);
-    }
-    fprintf(file, "\n");
-
+    writeToFile(arrayOfAvg, tt, M);
 
     return 0;
 }
-
-
