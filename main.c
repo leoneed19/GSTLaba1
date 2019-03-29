@@ -1,27 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <time.h>
-#include <math.h>
-
+#include <omp.h>
 
 struct MyStruct {
     int m;
     int n;
-    int *res;
+    long int *res;
 };
 
 
-void writeToFile(int *arrayOfAvg, long int time, int M) {
+void writeToFile(long int *arrayOfAvg, long int time, int M) {
     int i;
     FILE *writeFile;
     writeFile = fopen("../output.txt", "w");
-    for (i = 0; i < M; i++) {
+    //TODO раскоментить!!!!
+    /*for (i = 0; i < M; i++) {
         fprintf(writeFile, "%d", arrayOfAvg[i]);
         fprintf(writeFile, "%s", "\t");
         // printf("%d ", arrayOfAvg[i]);
         // printf("\t");
-    }
+    }*/
     fprintf(writeFile, "\n");
     fprintf(writeFile, "%li ", time);
     fprintf(writeFile, "\n");
@@ -30,7 +29,7 @@ void writeToFile(int *arrayOfAvg, long int time, int M) {
 
 
 struct MyStruct readFromFile() {
-    int n = 0, s, k = 0;
+    int n = 0, s = 0, k = 0;
     int iterations = 0;
 
     struct MyStruct result;
@@ -38,7 +37,7 @@ struct MyStruct readFromFile() {
     FILE *myFile;
     myFile = fopen("../input.txt", "r");
 
-    int *Res;
+    long int *Res;
 
     while ((fscanf(myFile, "%d", &s) != EOF)) {
         if (!myFile)
@@ -46,7 +45,7 @@ struct MyStruct readFromFile() {
         k += 1;
     }
 
-    Res = (int *) malloc(k * sizeof(int));
+    Res = (long int *) malloc(k * sizeof(long int));
     rewind(myFile);
     for (int i = 0; i < k; i++) {
         if (iterations == 0) {
@@ -57,7 +56,7 @@ struct MyStruct readFromFile() {
             fscanf(myFile, "%d", &result.n);
             iterations++;
         }
-        fscanf(myFile, "%d", &Res[i]);
+        fscanf(myFile, "%li", &Res[i]);
         // printf("c[%d]=%d  ", i, Res[i]);
         // printf("\t");
     }
@@ -69,9 +68,13 @@ struct MyStruct readFromFile() {
 
 
 int main() {
-    int N, M, i, j, summ, avg;
+    printf("aaaaa");
+//    int N, M, i, j, summ, avg;
+    int N = 0, M = 0, i = 0, j = 0, avg = 0;
+    long int summ = 0;
+    // printf("%d", 2);
     struct MyStruct result = readFromFile();
-    int *res;
+    long int *res;
 
 
     N = result.n;
@@ -81,20 +84,27 @@ int main() {
     printf("\n");
     printf("%d", M);
 
-    int *arrayOfAvg = (int *) malloc(M * sizeof(int));
+    long int *arrayOfAvg = (long int *) malloc(M * sizeof(long int));
 
     struct timespec mt1, mt2;
     long int tt;
 
     // Основной код
     clock_gettime(CLOCK_REALTIME, &mt1);
-    for (i = 0; i < M; i++) {
-        summ = 0;
-        for (j = 0; j < N; j++) {
-            summ = summ + res[i * N + j];
+
+#pragma omp parallel shared(res, arrayOfAvg) private(i, j, summ, avg)
+    {
+#pragma omp for
+        for (i = 0; i < M; i++) {
+            summ = 0;
+
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+                // printf("%i", omp_get_thread_num());
+                // printf("\n");
+            }
+            arrayOfAvg[i] = summ / N;
         }
-        avg = summ / N;
-        arrayOfAvg[i] = avg;
     }
     clock_gettime(CLOCK_REALTIME, &mt2);
 
@@ -103,6 +113,5 @@ int main() {
     printf("\n");
 
     writeToFile(arrayOfAvg, tt, M);
-
     return 0;
 }

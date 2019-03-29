@@ -16,8 +16,8 @@ int main() {
     int N,M;
 
     char str[12];
-    M = (int) (sqrtf(numm) * 1024.0 / 3.0);
-    N = (int) (sqrtf(numm) * 1024.0 / 3.0);
+    M = (int) (sqrtf(numm) * 1024.0 / sqrtf(3.061)) ;
+    N = (int) (sqrtf(numm) * 1024.0 / sqrtf(3.061)) ;
     sprintf(str, "%d", M);
     fputs(str, ptrfile);
     fputs("\n", ptrfile);
