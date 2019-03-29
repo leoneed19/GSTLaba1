@@ -3,6 +3,7 @@
 #include <time.h>
 #include <omp.h>
 
+
 struct MyStruct {
     int m;
     int n;
@@ -11,6 +12,7 @@ struct MyStruct {
 
 
 void writeToFile(long int *arrayOfAvg, long int time, int M) {
+//void writeToFile(long int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
     writeFile = fopen("../output.txt", "w");
@@ -68,14 +70,10 @@ struct MyStruct readFromFile() {
 
 
 int main() {
-    printf("aaaaa");
-//    int N, M, i, j, summ, avg;
     int N = 0, M = 0, i = 0, j = 0, avg = 0;
     long int summ = 0;
-    // printf("%d", 2);
     struct MyStruct result = readFromFile();
     long int *res;
-
 
     N = result.n;
     M = result.m;
@@ -97,11 +95,12 @@ int main() {
 #pragma omp for
         for (i = 0; i < M; i++) {
             summ = 0;
-
-            for (j = 0; j < N; j++) {
-                summ = summ + res[i * N + j];
-                // printf("%i", omp_get_thread_num());
-                // printf("\n");
+#pragma omp parallel shared(res, arrayOfAvg) private(j, summ)
+            {
+#pragma omp for
+                for (j = 0; j < N; j++) {
+                    summ = summ + res[i * N + j];
+                }
             }
             arrayOfAvg[i] = summ / N;
         }
@@ -111,7 +110,9 @@ int main() {
     tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
 
     printf("\n");
+    printf("%li", tt);
 
     writeToFile(arrayOfAvg, tt, M);
+//  writeToFile(arrayOfAvg, time_spent, M);
     return 0;
 }
