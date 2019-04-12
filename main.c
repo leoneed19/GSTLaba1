@@ -73,7 +73,7 @@ struct MyStruct readFromFile() {
 
 
 int main(int argc, char **argv) {
-    int N = 0, M = 0, i = 0, j = 0, rank, size;;
+    int N = 0, M = 0, i = 0, j = 0, rank, size;
     long int summ = 0;
     double tt;
     struct MyStruct result = readFromFile();
