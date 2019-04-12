@@ -8,7 +8,7 @@ This version based on OpenMPI library
 
 [root@localhost hpc]# ./configure
 
-[root@localhost hpc]# make && make install
+[root@localhost hpc]# sudo make && sudo make install
 
 Если не получится даже проверить версию (mpirun -version), то выполнить команду:
 [root@localhost hpc]# sudo ldconfig
