@@ -9,3 +9,5 @@
 /output.txt
 /main
 /input.txt
+/cmake-build-release
+/cmake-build-debug
