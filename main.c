@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <omp.h>
+#include <mpi.h>
 
+/// to compile: mpicc main.c -o main
+/// to run:     mpirun main
 
 struct MyStruct {
     int m;
@@ -11,7 +13,7 @@ struct MyStruct {
 };
 
 
-void writeToFile(long int *arrayOfAvg, long int time, int M) {
+void writeToFile(long int *arrayOfAvg, double time, int M) {
 //void writeToFile(long int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
@@ -24,7 +26,7 @@ void writeToFile(long int *arrayOfAvg, long int time, int M) {
         // printf("\t");
     }*/
     fprintf(writeFile, "\n");
-    fprintf(writeFile, "%li ", time);
+    fprintf(writeFile, "%f ", time);
     fprintf(writeFile, "\n");
     fclose(writeFile);
 }
@@ -32,6 +34,7 @@ void writeToFile(long int *arrayOfAvg, long int time, int M) {
 
 struct MyStruct readFromFile() {
     int n = 0, s = 0, k = 0;
+
     int iterations = 0;
 
     struct MyStruct result;
@@ -69,12 +72,12 @@ struct MyStruct readFromFile() {
 }
 
 
-int main() {
-    int N = 0, M = 0, i = 0, j = 0, avg = 0;
+int main(int argc, char **argv) {
+    int N = 0, M = 0, i = 0, j = 0, rank, size;;
     long int summ = 0;
+    double tt;
     struct MyStruct result = readFromFile();
     long int *res;
-
     N = result.n;
     M = result.m;
     res = result.res;
@@ -84,35 +87,32 @@ int main() {
 
     long int *arrayOfAvg = (long int *) malloc(M * sizeof(long int));
 
-    struct timespec mt1, mt2;
-    long int tt;
+    MPI_Init(&argc, &argv);
+    /// Возвращает количество процессов в данном коммуникаторе
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    /// Возвращает наш ранк
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    printf("process %d of %d \n", rank, size);
 
-    // Основной код
-    clock_gettime(CLOCK_REALTIME, &mt1);
+    /// Таймирование
+    double start = MPI_Wtime();
+    /// Основной код
+    /*for (i = 0; i < M; i++) {
+        summ = 0;
+        for (j = 0; j < N; j++) {
+            summ = summ + res[i * N + j];
 
-#pragma omp parallel shared(res, arrayOfAvg) private(i, j, summ, avg)
-    {
-#pragma omp for
-        for (i = 0; i < M; i++) {
-            summ = 0;
-#pragma omp parallel shared(res, arrayOfAvg) private(j, summ)
-            {
-#pragma omp for
-                for (j = 0; j < N; j++) {
-                    summ = summ + res[i * N + j];
-                }
-            }
-            arrayOfAvg[i] = summ / N;
         }
-    }
-    clock_gettime(CLOCK_REALTIME, &mt2);
-
-    tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+        arrayOfAvg[i] = summ / N;
+    }*/
+    MPI_Finalize();
+    /// Таймирование
+    double end = MPI_Wtime();
+    tt = start - end;
 
     printf("\n");
-    printf("%li", tt);
+    printf("%f", tt);
 
     writeToFile(arrayOfAvg, tt, M);
-//  writeToFile(arrayOfAvg, time_spent, M);
     return 0;
 }

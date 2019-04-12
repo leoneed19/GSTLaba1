@@ -7,7 +7,7 @@
 // TO RUN ./gen
 
 
-int main() {
+int main(int argc) {
     FILE *ptrfile;
     ptrfile = fopen("input.txt", "w");
     float numm;
