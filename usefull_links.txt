@@ -1,2 +1,9 @@
-https://www.youtube.com/watch?v=IlM93rIJRAg - about OMP and MPI
 Lections - https://drive.google.com/drive/folders/1c7iKiLtb8ieN93-rjHhN-RDxXI-3OQNc
+
+
+Videos about OMP and MPI:
+https://www.youtube.com/watch?v=IlM93rIJRAg 
+
+
+Timing with openMPI:
+https://www.codingame.com/playgrounds/349/introduction-to-mpi/measuring-time  
