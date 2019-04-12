@@ -1,7 +1,6 @@
 This version based on OpenMPI library
 
-[root@localhost hpc]# wget https://download.open-mpi.org/release/open-mpi/v4.0/o
-penmpi-4.0.1.tar.gz
+[root@localhost hpc]# wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz
 
 [root@localhost hpc]# tar xvzf openmpi-4.0.1.tar.gz
 
