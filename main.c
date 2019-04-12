@@ -12,17 +12,17 @@ struct MyStruct {
 
 
 void writeToFile(long int *arrayOfAvg, long int time, int M) {
-//void writeToFile(long int *arrayOfAvg, double time, int M) {
+// void writeToFile(long int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
     writeFile = fopen("../output.txt", "w");
-    //TODO раскоментить!!!!
-    /*for (i = 0; i < M; i++) {
+    // TODO раскоментить!!!!
+    /* for (i = 0; i < M; i++) {
         fprintf(writeFile, "%d", arrayOfAvg[i]);
         fprintf(writeFile, "%s", "\t");
         // printf("%d ", arrayOfAvg[i]);
         // printf("\t");
-    }*/
+    } */
     fprintf(writeFile, "\n");
     fprintf(writeFile, "%li ", time);
     fprintf(writeFile, "\n");
@@ -91,13 +91,13 @@ int main() {
     long int tt;
 
     // Основной код
-//    clock_gettime(CLOCK_REALTIME, &mt1);
+    // clock_gettime(CLOCK_REALTIME, &mt1);
     time1 = omp_get_wtime();
     omp_set_dynamic(0);
     omp_set_num_threads(n_threads);
-//#pragma omp parallel shared(res, arrayOfAvg) private(i, j, summ, avg)
-  //  {
-//#pragma omp for
+    // #pragma omp parallel shared(res, arrayOfAvg) private(i, j, summ, avg)
+    //  {
+    // #pragma omp for
         for (i = 0; i < M; i++) {
             summ = 0;
 #pragma omp parallel shared(res, arrayOfAvg) private(j, summ)
@@ -110,16 +110,16 @@ int main() {
             arrayOfAvg[i] = summ / N;
         }
     //}
-//    clock_gettime(CLOCK_REALTIME, &mt2);
+    // clock_gettime(CLOCK_REALTIME, &mt2);
     time2 = omp_get_wtime();
-//    tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+    // tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
     resTime = time2 - time1;
     printf("\n");
-//    printf("%li", tt);
+    // printf("%li", tt);
     printf("%lf", resTime);
 
     writeToFile(arrayOfAvg, resTime, M);
-//    writeToFile(arrayOfAvg, tt, M);
-//  writeToFile(arrayOfAvg, time_spent, M);
+    // writeToFile(arrayOfAvg, tt, M);
+    // writeToFile(arrayOfAvg, time_spent, M);
     return 0;
 }
