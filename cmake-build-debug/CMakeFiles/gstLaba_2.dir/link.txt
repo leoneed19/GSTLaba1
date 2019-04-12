@@ -1,0 +1,1 @@
+/usr/bin/cc -g  -fopenmp -fopenmp CMakeFiles/gstLaba_2.dir/main.c.o  -o gstLaba_2 

@@ -1,0 +1,4 @@
+/home/leon/CLionProjects/gstLaba_2/cmake-build-release/CMakeFiles/rebuild_cache.dir
+/home/leon/CLionProjects/gstLaba_2/cmake-build-release/CMakeFiles/edit_cache.dir
+/home/leon/CLionProjects/gstLaba_2/cmake-build-release/CMakeFiles/gstLaba_2.dir
+/home/leon/CLionProjects/gstLaba_2/cmake-build-release/CMakeFiles/gstLaba_2_g.dir
