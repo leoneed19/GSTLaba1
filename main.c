@@ -75,6 +75,8 @@ int main() {
     struct MyStruct result = readFromFile();
     long int *res;
 
+    int n_threads = 4;
+
     N = result.n;
     M = result.m;
     res = result.res;
@@ -85,34 +87,39 @@ int main() {
     long int *arrayOfAvg = (long int *) malloc(M * sizeof(long int));
 
     struct timespec mt1, mt2;
+    double time1, time2, resTime;
     long int tt;
 
     // Основной код
-    clock_gettime(CLOCK_REALTIME, &mt1);
-
-#pragma omp parallel shared(res, arrayOfAvg) private(i, j, summ, avg)
-    {
-#pragma omp for
+//    clock_gettime(CLOCK_REALTIME, &mt1);
+    time1 = omp_get_wtime();
+    omp_set_dynamic(0);
+    omp_set_num_threads(n_threads);
+//#pragma omp parallel shared(res, arrayOfAvg) private(i, j, summ, avg)
+  //  {
+//#pragma omp for
         for (i = 0; i < M; i++) {
             summ = 0;
 #pragma omp parallel shared(res, arrayOfAvg) private(j, summ)
             {
 #pragma omp for
-                for (j = 0; j < N; j++) {
-                    summ = summ + res[i * N + j];
-                }
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+            }
             }
             arrayOfAvg[i] = summ / N;
         }
-    }
-    clock_gettime(CLOCK_REALTIME, &mt2);
-
-    tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
-
+    //}
+//    clock_gettime(CLOCK_REALTIME, &mt2);
+    time2 = omp_get_wtime();
+//    tt = 1000000000 * (mt2.tv_sec - mt1.tv_sec) + (mt2.tv_nsec - mt1.tv_nsec);
+    resTime = time2 - time1;
     printf("\n");
-    printf("%li", tt);
+//    printf("%li", tt);
+    printf("%lf", resTime);
 
-    writeToFile(arrayOfAvg, tt, M);
+    writeToFile(arrayOfAvg, resTime, M);
+//    writeToFile(arrayOfAvg, tt, M);
 //  writeToFile(arrayOfAvg, time_spent, M);
     return 0;
 }
