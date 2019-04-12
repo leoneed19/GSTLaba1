@@ -1,14 +1,28 @@
-This version based on OpenMPI library
+# GSTLaba1
+generator.c - file to generate matrix X mb
 
-[root@localhost hpc]# wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.1.tar.gz
+TO COMPILE generator.c you should use in terminal:
 
-[root@localhost hpc]# tar xvzf openmpi-4.0.1.tar.gz
+cc generator.c -lm -o gen
 
-[root@localhost hpc]# cd openmpi-4.0.1/
+TO RUN it use in terminal: 
 
-[root@localhost hpc]# ./configure
+./gen
 
-[root@localhost hpc]# sudo make && sudo make install
+main.c - program that make result vector from matrix. Every element in vector includes AVG of all elements in each row.
 
-Если не получится даже проверить версию (mpirun -version), то выполнить команду:
-[root@localhost hpc]# sudo ldconfig
+
+Example of "input.txt" file
+
+
+        3 2 4
+        
+        2 2 5
+        
+        1 1 1
+        
+        
+Example of "output.txt" file
+
+
+        3 3 1
