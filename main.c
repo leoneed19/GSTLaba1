@@ -17,7 +17,7 @@ void writeToFile(long int *arrayOfAvg, double time, int M) {
 //void writeToFile(long int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
-    writeFile = fopen("../output.txt", "w");
+    writeFile = fopen("output.txt", "w");
     //TODO раскоментить!!!!
     /*for (i = 0; i < M; i++) {
         fprintf(writeFile, "%d", arrayOfAvg[i]);
@@ -34,14 +34,10 @@ void writeToFile(long int *arrayOfAvg, double time, int M) {
 
 struct MyStruct readFromFile() {
     int n = 0, s = 0, k = 0;
-
     int iterations = 0;
-
     struct MyStruct result;
-
     FILE *myFile;
-    myFile = fopen("../input.txt", "r");
-
+    myFile = fopen("input.txt", "r");
     long int *Res;
 
     while ((fscanf(myFile, "%d", &s) != EOF)) {
@@ -74,17 +70,13 @@ struct MyStruct readFromFile() {
 
 int main(int argc, char **argv) {
     int N = 0, M = 0, i = 0, j = 0, rank, size;
-    long int summ = 0;
+    long int summ = 0, avg = 0, avgValue = 0;
     double tt;
     struct MyStruct result = readFromFile();
     long int *res;
     N = result.n;
     M = result.m;
     res = result.res;
-    printf("%d", N);
-    printf("\n");
-    printf("%d", M);
-
     long int *arrayOfAvg = (long int *) malloc(M * sizeof(long int));
 
     MPI_Init(&argc, &argv);
@@ -92,24 +84,72 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     /// Возвращает наш ранк
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Status status;
     printf("process %d of %d \n", rank, size);
-
     /// Таймирование
     double start = MPI_Wtime();
     /// Основной код
-    /*for (i = 0; i < M; i++) {
-        summ = 0;
-        for (j = 0; j < N; j++) {
-            summ = summ + res[i * N + j];
 
+    // TODO есть идея как-то разделить входной массив данных на 3 части каждую посчитать на своем узле и отправить на
+    //  нулевой ранк где мы добавляем наши средние суммы в массив
+    // MPI_Barrier(MPI_COMM_WORLD);
+/*
+    if (rank == 1) {
+        for (i = 0; i < M / 3; i++) {
+            summ = 0;
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+            }
+            avg = summ / N;
+            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
         }
-        arrayOfAvg[i] = summ / N;
-    }*/
-    MPI_Finalize();
+    }
+
+    if (rank == 2) {
+        for (i = M / 3; i < 2 * M / 3; i++) {
+            summ = 0;
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+            }
+            avg = summ / N;
+            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
+        }
+    }
+
+    if (rank == 3) {
+        for (i = 2 * M / 3; i < M; i++) {
+            summ = 0;
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+            }
+            avg = summ / N;
+            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
+        }
+    }
+*/
+    if (rank == 1) {
+        for (i = 0; i < M; i++) {
+            summ = 0;
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+            }
+            avg = summ / N;
+            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
+        }
+    }
+
+    if (rank == 0) {
+        for (i = 0; i < M; i++) {
+            MPI_Recv(&avgValue, 1, MPI_LONG_INT, i, 0, MPI_COMM_WORLD, &status);
+            arrayOfAvg[i] = avgValue;
+        }
+    }
+
     /// Таймирование
     double end = MPI_Wtime();
-    tt = start - end;
+    tt = end - start;
 
+    MPI_Finalize();
     printf("\n");
     printf("%f", tt);
 
