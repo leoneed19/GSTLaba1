@@ -93,7 +93,6 @@ int main(int argc, char **argv) {
     // TODO есть идея как-то разделить входной массив данных на 3 части каждую посчитать на своем узле и отправить на
     //  нулевой ранк где мы добавляем наши средние суммы в массив
     // MPI_Barrier(MPI_COMM_WORLD);
-/*
     if (rank == 1) {
         for (i = 0; i < M / 3; i++) {
             summ = 0;
@@ -126,8 +125,7 @@ int main(int argc, char **argv) {
             MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
         }
     }
-*/
-    if (rank == 1) {
+ /*   if (rank == 1) {
         for (i = 0; i < M; i++) {
             summ = 0;
             for (j = 0; j < N; j++) {
@@ -136,11 +134,19 @@ int main(int argc, char **argv) {
             avg = summ / N;
             MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
         }
-    }
+    }*/
 
     if (rank == 0) {
-        for (i = 0; i < M; i++) {
-            MPI_Recv(&avgValue, 1, MPI_LONG_INT, i, 0, MPI_COMM_WORLD, &status);
+        for (i = 0; i < M/3; i++) {
+            MPI_Recv(&avgValue, 1, MPI_LONG_INT, 1, 0, MPI_COMM_WORLD, &status);
+            arrayOfAvg[i] = avgValue;
+        }
+        for (i = M/3; i < 2*M/3; i++) {
+            MPI_Recv(&avgValue, 1, MPI_LONG_INT, 2, 0, MPI_COMM_WORLD, &status);
+            arrayOfAvg[i] = avgValue;
+        }
+        for (i = 2*M/3; i < M; i++) {
+            MPI_Recv(&avgValue, 1, MPI_LONG_INT, 3, 0, MPI_COMM_WORLD, &status);
             arrayOfAvg[i] = avgValue;
         }
     }
