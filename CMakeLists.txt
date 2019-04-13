@@ -3,4 +3,5 @@ project(gstLaba_2 C)
 
 set(CMAKE_C_STANDARD 11)
 add_executable(gstLaba_2 main.c)
+add_executable(main main.c)
 add_executable(gstLaba_2_g generator.c)

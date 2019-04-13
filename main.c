@@ -71,7 +71,7 @@ struct MyStruct readFromFile() {
 
 
 int main(int argc, char **argv) {
-    int N = 0, M = 0, i = 0, j = 0, rank, size;
+    int N = 0, M = 0, i = 0, j = 0, rank, size, rc, resultat;
     long int summ = 0, avg = 0, avgValue = 0;
     double tt;
     struct MyStruct result = readFromFile();
@@ -81,48 +81,86 @@ int main(int argc, char **argv) {
     res = result.res;
     long int *arrayOfAvg = (long int *) malloc(M * sizeof(long int));
 
-    MPI_Init(&argc, &argv);
+
+    int valueN = 0;
+    int gg = 0, razmer = 0, x = 0;
+
+    printf("%d", M);
+
+    //MPI_Init(&argc, &argv);
+    if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
+
+        fprintf(stderr, "Error starting MPI program. Terminating.\n");
+
+        MPI_Abort(MPI_COMM_WORLD, rc);
+
+    }
+    long int *recvbuf;
+    long int *recvbuf2;
     /// Возвращает количество процессов в данном коммуникаторе
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     /// Возвращает наш ранк
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     printf("process %d of %d \n", rank, size);
+    //printf("jopa");
+
     /// Таймирование
-    double start = MPI_Wtime();
+    //double start = MPI_Wtime();
     /// Основной код
 
-    // TODO есть идея как-то разделить входной массив данных на 3 части каждую посчитать на своем узле и отправить на
+    //  есть идея как-то разделить входной массив данных на 3 части каждую посчитать на своем узле и отправить на
     //  нулевой ранк где мы добавляем наши средние суммы в массив
     // MPI_Barrier(MPI_COMM_WORLD);
 
 //    long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
 
-    int gg = 0, razmer = 0, x = 0;
+    recvbuf = (long int *) malloc(M * sizeof(long int));
+//    recvbuf2 = (long int *) malloc(M * sizeof(long int));
     if (rank == 0) {
-        long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
+        printf("Number of tasks=%d\n", size);
+        //printf("jopa");
         //MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
-        MPI_Scatter(res, M / size, MPI_LONG_INT, recvbuf, M / size, MPI_LONG_INT, 0, MPI_COMM_WORLD);
+        recvbuf = (long int *) malloc(M * sizeof(long int));
+        recvbuf2 = (long int *) malloc(M * sizeof(long int));
     }
+    MPI_Scatter(res, M , MPI_LONG_INT, recvbuf, M , MPI_LONG_INT, 0, MPI_COMM_WORLD);
 
-    int valueN = 0;
-    if (rank > 0) {
+    /*for (i = 0; i < M / size; i++) {
+        summ = 0;
+        for (j = 0; j < N; j++) {
+            summ = summ + recvbuf[j];
+        }
+//        arrayOfAvg[i] = avgValue;
+        avg = summ / N;
+        //MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
+    }*/
+    //printf("My rank=%d recvbuf=%ld recvbuf=%ld avgValue=%ld\n", rank, recvbuf[0], recvbuf[1], avgValue);
+
+    MPI_Reduce(&recvbuf, &summ, M, MPI_INT, MPI_SUM, rank, MPI_COMM_WORLD);
+    avg = summ / N;
+    MPI_Gather(&avg, 1 , MPI_LONG_INT, arrayOfAvg, 1 , MPI_LONG_INT, rank, MPI_COMM_WORLD);
+    if (rank == 0) {
         /*for (i = 0; i < M; i++) {
             summ = 0;
             for (j = 0; j < N; j++) {
                 summ = summ + res[i * N + j];
             }
 
-
+            arrayOfAvg[i] = avgValue;
             avg = summ / N;
             MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
         }*/
 
-        MPI_Status status;
+        //printf("jopa");
+        //MPI_Status status;
         //MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         printf("%d", valueN);
-        long int *recvbuf2 = (long int *) malloc(M / size * sizeof(long int));
-        MPI_Gather(res, M / size, MPI_LONG_INT, recvbuf2, M / size, MPI_LONG_INT, rank, MPI_COMM_WORLD);
+        for (i = 0; i < M; i++) {
+            printf("%ld", arrayOfAvg[i]);
+        }
+        //long int *recvbuf2 = (long int *) malloc(M * sizeof(long int));
+        //printf((const char *) recvbuf[0]);
         // MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
         // printf("%d",valueN);
     }
@@ -136,13 +174,13 @@ int main(int argc, char **argv) {
     }*/
 
     /// Таймирование
-    double end = MPI_Wtime();
-    tt = end - start;
+    //double end = MPI_Wtime();
+    //tt = end - start;
 
     MPI_Finalize();
     printf("\n");
-    printf("%f", tt);
+    //printf("%f", tt);
 
-    writeToFile(arrayOfAvg, tt, M);
+    //writeToFile(arrayOfAvg, tt, M);
     return 0;
 }
