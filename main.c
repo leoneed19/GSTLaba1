@@ -5,6 +5,8 @@
 
 /// to compile: mpicc main.c -o main
 /// to run:     mpirun main
+/// to run with 4 threads: mpiexec --use-hwthread-cpus --n 4 ./main
+/// to run with 2 threads: mpiexec -np 2 ./main
 
 struct MyStruct {
     int m;
@@ -84,7 +86,7 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     /// Возвращает наш ранк
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Status status;
+
     printf("process %d of %d \n", rank, size);
     /// Таймирование
     double start = MPI_Wtime();
@@ -93,63 +95,41 @@ int main(int argc, char **argv) {
     // TODO есть идея как-то разделить входной массив данных на 3 части каждую посчитать на своем узле и отправить на
     //  нулевой ранк где мы добавляем наши средние суммы в массив
     // MPI_Barrier(MPI_COMM_WORLD);
-    if (rank == 1) {
-        for (i = 0; i < M / 3; i++) {
-            summ = 0;
-            for (j = 0; j < N; j++) {
-                summ = summ + res[i * N + j];
-            }
-            avg = summ / N;
-            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
-        }
-    }
 
-    if (rank == 2) {
-        for (i = M / 3; i < 2 * M / 3; i++) {
-            summ = 0;
-            for (j = 0; j < N; j++) {
-                summ = summ + res[i * N + j];
-            }
-            avg = summ / N;
-            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
-        }
-    }
+    long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
 
-    if (rank == 3) {
-        for (i = 2 * M / 3; i < M; i++) {
-            summ = 0;
-            for (j = 0; j < N; j++) {
-                summ = summ + res[i * N + j];
-            }
-            avg = summ / N;
-            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
-        }
-    }
- /*   if (rank == 1) {
-        for (i = 0; i < M; i++) {
-            summ = 0;
-            for (j = 0; j < N; j++) {
-                summ = summ + res[i * N + j];
-            }
-            avg = summ / N;
-            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
-        }
-    }*/
-
+    int gg = 0, razmer = 0, x = 0;
     if (rank == 0) {
-        for (i = 0; i < M/3; i++) {
-            MPI_Recv(&avgValue, 1, MPI_LONG_INT, 1, 0, MPI_COMM_WORLD, &status);
-            arrayOfAvg[i] = avgValue;
-        }
-        for (i = M/3; i < 2*M/3; i++) {
-            MPI_Recv(&avgValue, 1, MPI_LONG_INT, 2, 0, MPI_COMM_WORLD, &status);
-            arrayOfAvg[i] = avgValue;
-        }
-        for (i = 2*M/3; i < M; i++) {
-            MPI_Recv(&avgValue, 1, MPI_LONG_INT, 3, 0, MPI_COMM_WORLD, &status);
-            arrayOfAvg[i] = avgValue;
-        }
+        MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Scatter(res, M / size, MPI_LONG_INT, recvbuf, M / size, MPI_LONG_INT, 0, MPI_COMM_WORLD);
     }
+
+    int valueN = 0;
+    if (rank != 0) {
+        /*for (i = 0; i < M; i++) {
+            summ = 0;
+            for (j = 0; j < N; j++) {
+                summ = summ + res[i * N + j];
+            }
+
+
+            avg = summ / N;
+            MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
+        }*/
+        MPI_Status status;
+        long int *recvbuf2 = (long int *) malloc(M / size * sizeof(long int));
+        MPI_Gather(res, M / size, MPI_LONG_INT, recvbuf2, M / size, MPI_LONG_INT, rank, MPI_COMM_WORLD);
+//        MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        printf("%d",valueN);
+    }
+
+
+    /*if (rank == 0) {
+        for (j = 0; j < size; j++) {
+            MPI_Recv(&avgValue, 1, MPI_LONG_INT, j, MPI_COMM_WORLD, &status);
+        }
+        arrayOfAvg[i] = avgValue;
+    }*/
 
     /// Таймирование
     double end = MPI_Wtime();
