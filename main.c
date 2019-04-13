@@ -96,16 +96,17 @@ int main(int argc, char **argv) {
     //  нулевой ранк где мы добавляем наши средние суммы в массив
     // MPI_Barrier(MPI_COMM_WORLD);
 
-    long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
+//    long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
 
     int gg = 0, razmer = 0, x = 0;
     if (rank == 0) {
-        MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
+        //MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Scatter(res, M / size, MPI_LONG_INT, recvbuf, M / size, MPI_LONG_INT, 0, MPI_COMM_WORLD);
     }
 
     int valueN = 0;
-    if (rank != 0) {
+    if (rank > 0) {
         /*for (i = 0; i < M; i++) {
             summ = 0;
             for (j = 0; j < N; j++) {
@@ -116,11 +117,14 @@ int main(int argc, char **argv) {
             avg = summ / N;
             MPI_Send(&avg, 1, MPI_LONG_INT, 0, 0, MPI_COMM_WORLD);
         }*/
+
         MPI_Status status;
+        //MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        printf("%d", valueN);
         long int *recvbuf2 = (long int *) malloc(M / size * sizeof(long int));
         MPI_Gather(res, M / size, MPI_LONG_INT, recvbuf2, M / size, MPI_LONG_INT, rank, MPI_COMM_WORLD);
-//        MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-        printf("%d",valueN);
+        // MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+        // printf("%d",valueN);
     }
 
 
