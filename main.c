@@ -16,12 +16,12 @@
 struct MyStruct {
     int m;
     int n;
-    long int *res;
+    int *res;
 };
 
 
-void writeToFile(long int *arrayOfAvg, double time, int M) {
-//void writeToFile(long int *arrayOfAvg, double time, int M) {
+void writeToFile(int *arrayOfAvg, double time, int M) {
+//void writeToFile(int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
     writeFile = fopen("output.txt", "w");
@@ -38,10 +38,10 @@ void writeToFile(long int *arrayOfAvg, double time, int M) {
     fclose(writeFile);
 }
 
-long int *myf(int N, int M, int size, long int *recvbuf) {
+int *myf(int N, int M, int size, int *recvbuf) {
     int i, j;
-    long int avg;
-    long int * arrayOfAvgLittle = (long int *) malloc(M / size * sizeof(long int));
+    int avg;
+    int * arrayOfAvgLittle = (int *) malloc(M / size * sizeof(int));
     for (i = 0; i < M / size; i++) {
         int summ = 0;
         for (j = 0; j < N; j++) {
@@ -61,7 +61,7 @@ struct MyStruct readFromFile() {
     struct MyStruct result;
     FILE *myFile;
     myFile = fopen("input.txt", "r");
-    long int *Res;
+    int *Res;
 
     while ((fscanf(myFile, "%d", &s) != EOF)) {
         if (!myFile)
@@ -69,7 +69,7 @@ struct MyStruct readFromFile() {
         k += 1;
     }
 
-    Res = (long int *) malloc(k * sizeof(long int));
+    Res = (int *) malloc(k * sizeof(int));
     rewind(myFile);
     for (int i = 0; i < k; i++) {
         if (iterations == 0) {
@@ -92,24 +92,11 @@ struct MyStruct readFromFile() {
 
 
 int main(int argc, char **argv) {
-    long int *arrayOfAvgLittle = (long int *) malloc(50 * sizeof(long int));
-    long int *res;
-    long int *arrayOfAvg = (long int *) malloc(10 * sizeof(long int));;
-    int N = 0, M = 0, i = 0, j = 0, rank, size, rc, resultat;
-    if (rank == 0) {
-        long int summ = 0, avg = 0, avgValue = 0;
-        double tt;
-        struct MyStruct result = readFromFile();
-        long int *res;
-        N = result.n;
-        M = result.m;
-        res = result.res;
-        long int *arrayOfAvg = (long int *) malloc(M * sizeof(long int));
-        //MPI_Bcast(&M, 1, MPI_INT,0, MPI_COMM_WORLD);
-    }
-    printf("%d", M);
 
-    //MPI_Init(&argc, &argv);
+    int *arrayOfAvgLittle = (int *) malloc(50 * sizeof(int));
+    int *res;
+    int *arrayOfAvg = (int *) malloc(10 * sizeof(int));;
+    int N = 0, M = 0, i = 0, j = 0, rank, size, rc, resultat;
     if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
 
         fprintf(stderr, "Error starting MPI program. Terminating.\n");
@@ -117,7 +104,29 @@ int main(int argc, char **argv) {
         MPI_Abort(MPI_COMM_WORLD, rc);
 
     }
-    long int *recvbuf;
+
+    struct MyStruct result = readFromFile();
+
+    N = result.n;
+    M = result.m;
+    if (rank == 0) {
+        int summ = 0, avg = 0, avgValue = 0;
+        double tt;
+        //struct MyStruct result = readFromFile();
+        int *res;
+        //N = result.n;
+        //M = result.m;
+        res = result.res;
+        int *arrayOfAvg = (int *) malloc(M * sizeof(int));
+        //MPI_Bcast(&M, 1, MPI_INT,0, MPI_COMM_WORLD);
+        //M = 10;
+//        MPI_Bcast(&N, 1, MPI_INT,0, MPI_COMM_WORLD);
+    }
+    printf("%d", M);
+    MPI_Bcast(&M, 1, MPI_INT,0, MPI_COMM_WORLD);
+    //MPI_Init(&argc, &argv);
+
+    int *recvbuf;
     /// Возвращает количество процессов в данном коммуникаторе
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     /// Возвращает наш ранк
@@ -130,22 +139,23 @@ int main(int argc, char **argv) {
     //double start = MPI_Wtime();
     /// Основной код
     // MPI_Barrier(MPI_COMM_WORLD);
-    long int *resss = (long int *) malloc(M * sizeof(long int));
-    //    long int *recvbuf = (long int *) malloc(M / size * sizeof(long int));
+    int *resss = (int *) malloc(M * sizeof(int));
+    //    int *recvbuf = (int *) malloc(M / size * sizeof(int));
 //    if (rank == 0) {
-//    recvbuf = (long int *) malloc(M  * N/ size * sizeof(long int));
+//    recvbuf = (int *) malloc(M  * N/ size * sizeof(int));
 //    }
-    recvbuf = (long int *) malloc(M * N / size * sizeof(long int));
-    //recvbuf = (long int *) malloc(M * sizeof(long int));
-    //recvbuf2 = (long int *) malloc(M * sizeof(long int));
+    recvbuf = (int *) malloc(M * N / size * sizeof(int));
+    //recvbuf = (int *) malloc(M * sizeof(int));
+    //recvbuf2 = (int *) malloc(M * sizeof(int));
     //if (rank == 0) {
     //printf("Number of tasks=%d\n", size);
     //printf("jopa");
     //MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //recvbuf2 = (long int *) malloc(M * sizeof(long int));
+    //recvbuf2 = (int *) malloc(M * sizeof(int));
     //}
     //if (rank != 0){
     //if (rank == 0) {
+    //printf("M=%d",3);
     MPI_Status status;
    // MPI_Recv(&M, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
     MPI_Scatter(res, M * N / size, MPI_LONG_INT, recvbuf, M * N / size, MPI_LONG_INT, 0, MPI_COMM_WORLD);
@@ -160,6 +170,7 @@ int main(int argc, char **argv) {
     printf("\n");
     //printf("My rank=%d recvbuf=%ld recvbuf=%ld avgValue=%ld\n", rank, recvbuf[0], recvbuf[1], avgValue);
     arrayOfAvgLittle = myf(N, M, size, recvbuf);
+    printf("M%d",M);
     //}
     //MPI_Reduce(&recvbuf, &summ, M, MPI_INT, MPI_SUM, rank, MPI_COMM_WORLD);
     //avg = summ / N;
@@ -205,7 +216,7 @@ int main(int argc, char **argv) {
         //printf("jopa");
         //MPI_Status status;
         //MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
-        //long int *recvbuf2 = (long int *) malloc(M * sizeof(long int));
+        //int *recvbuf2 = (int *) malloc(M * sizeof(int));
         //printf((const char *) recvbuf[0]);
         // MPI_Recv(&valueN, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
          //printf("%s","rank = 0");

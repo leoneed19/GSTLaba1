@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/time.h>
 #include <mpi.h>
 
 
@@ -74,12 +75,12 @@ struct MyStruct readFromFile() {
 }
 
 
-void process_data(int rank, int size, int count, int m, const int *pInt, int *resss, int *r) {
+void process_data(int rank, int size, int count, int m, const int *pInt, const int *resss, int *r) {
     int summ = 0;
     // printf("RRRRR %i \n", rank);
-    for (int i = 0; i < m / size; i++)
-        for (int i1 = 0; i1 < m; i1++)
-            printf("rank = %i resss[%i]=%i\t\n", rank, i * m + i1, resss[i * m + i1]);
+    /*for (int i = 0; i < m / size; i++)
+        for (int i1 = 0; i1 < m; i1++)*/
+            //printf("rank = %i resss[%i]=%i\t\n", rank, i * m + i1, resss[i * m + i1]);
 
     for (int i = 0; i < m / size; i++) {
         summ = 0;
@@ -87,15 +88,29 @@ void process_data(int rank, int size, int count, int m, const int *pInt, int *re
             summ = summ + resss[i * m + j];
         }
         r[i] = summ / m;
-        printf("r[%i] = %i\n", i, r[i]);
+        //printf("r[%i] = %i\n", i, r[i]);
 
     }
 }
+
+
+/*long current_timestamp() {
+    struct timeval te;
+    gettimeofday(&te, NULL);
+    long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
+    return milliseconds;
+}*/
+
 
 int main(int argc, char **argv) {
     int M = 0, rank, size, rc;
     int *res;
     int *res2 = NULL;
+//    long time = 0;
+//    long time1 = 0;
+    double startTime = 0;
+    double endTime = 0;
+//    MPI_WTIME_IS_GLOBAL;
     if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
 
         fprintf(stderr, "Error starting MPI program. Terminating.\n");
@@ -113,7 +128,7 @@ int main(int argc, char **argv) {
     }
 
     MPI_Bcast(&M, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("%i - %i\t\n", M, rank);
+    //printf("%i - %i\t\n", M, rank);
     res2 = (int *) malloc((M * M) * sizeof(int));
 
     if (rank == 0) {
@@ -125,14 +140,20 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("%i - %i\t\n", M, rank);
+    //printf("%i - %i\t\n", M, rank);
 
     MPI_Bcast(res2, M * M, MPI_INT, 0, MPI_COMM_WORLD);
     int *send = (int *) malloc(M * M * sizeof(int));
-    int *resss = (int *) malloc(M * M * sizeof(int));
+    int *resss = (int *) malloc(M * M / size * sizeof(int));
     int *r = (int *) malloc(M / size * sizeof(int));
     int *r2 = (int *) malloc(M * sizeof(int));
     int part_count = (int) (M * M / size);
+
+    if (rank == 0) {
+        startTime = MPI_Wtime();
+        // time = current_timestamp();
+    }
+
     MPI_Scatter(res2, part_count, MPI_INT, resss, part_count,
                 MPI_INT, 0,
                 MPI_COMM_WORLD);
@@ -143,11 +164,19 @@ int main(int argc, char **argv) {
                MPI_INT, 0,
                MPI_COMM_WORLD);
     if (rank == 0) {
-        for (int ii = 0; ii < M; ++ii) {
+        endTime = MPI_Wtime();
+        // time1 = current_timestamp() - time;
+        printf("time %f \n", endTime - startTime);
+    }
 
+    if (rank == 0) {
+        writeToFile(r2, endTime - startTime, M);
+        // printf("%li", time);
+        // long time = current_timestamp();
+        /* for (int ii = 0; ii < M; ++ii) {
             printf("%i ", r2[ii]);
-        }
-        printf("\n");
+        }*/
+        //printf("\n");
         free(res2);
     }
     MPI_Finalize();
