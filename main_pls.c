@@ -106,11 +106,11 @@ int main(int argc, char **argv) {
     int M = 0, rank, size, rc;
     int *res;
     int *res2 = NULL;
-//    long time = 0;
-//    long time1 = 0;
+    //    long time = 0;
+    //    long time1 = 0;
     double startTime = 0;
     double endTime = 0;
-//    MPI_WTIME_IS_GLOBAL;
+    //    MPI_WTIME_IS_GLOBAL;
     if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
 
         fprintf(stderr, "Error starting MPI program. Terminating.\n");
@@ -138,6 +138,7 @@ int main(int argc, char **argv) {
         for (i11 = 0; i11 < M * M; i11++) {
             res2[i11] = res[i11];
         }
+        free(res);
     }
 
     //printf("%i - %i\t\n", M, rank);
