@@ -37,6 +37,7 @@ struct MyStruct readFromFile() {
     struct MyStruct result;
     FILE *myFile;
     myFile = fopen("/home/mpirun/mpi4py_benchmarks/input.txt", "r");
+//    myFile = fopen("input.txt", "r");
     int *Res;
 
     while ((fscanf(myFile, "%d", &s) != EOF)) {
@@ -113,7 +114,7 @@ int main(int argc, char **argv) {
     }
 
     MPI_Bcast(res2, M * M, MPI_INT, 0, MPI_COMM_WORLD);
-    int *send = (int *) malloc(M * M * sizeof(int));
+//    int *send = (int *) malloc(M * M * sizeof(int));
     int *resss = (int *) malloc(M * M / size * sizeof(int));
     int *r = (int *) malloc(M / size * sizeof(int));
     int *r2 = (int *) malloc(M * sizeof(int));
@@ -136,6 +137,7 @@ int main(int argc, char **argv) {
         endTime = MPI_Wtime();
         FILE *writeFile;
         writeFile = fopen("/home/mpirun/mpi4py_benchmarks/output.txt", "w");
+//        writeFile = fopen("output.txt", "w");
         fprintf(writeFile, "%f", endTime - startTime);
 
     }
