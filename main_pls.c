@@ -25,7 +25,7 @@ void writeToFile(int *arrayOfAvg, double time, int M) {
 //void writeToFile(int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
-    writeFile = fopen("output.txt", "w");
+    writeFile = fopen("/home/mpirun/mpi4py_benchmarks/output.txt", "w");
     for (i = 0; i < M; i++) {
         fprintf(writeFile, "%d", arrayOfAvg[i]);
         fprintf(writeFile, "%s", "\t");
@@ -44,7 +44,7 @@ struct MyStruct readFromFile() {
     int iterations = 0;
     struct MyStruct result;
     FILE *myFile;
-    myFile = fopen("input.txt", "r");
+    myFile = fopen("/home/mpirun/mpi4py_benchmarks/input.txt", "r");
     int *Res;
 
     while ((fscanf(myFile, "%d", &s) != EOF)) {
@@ -105,6 +105,7 @@ void process_data(int rank, int size, int count, int m, const int *pInt, const i
 int main(int argc, char **argv) {
     int M = 0, rank, size, rc;
     int *res;
+    printf("%i\n",rank);
     int *res2 = NULL;
     //    long time = 0;
     //    long time1 = 0;
@@ -167,12 +168,19 @@ int main(int argc, char **argv) {
     if (rank == 0) {
         endTime = MPI_Wtime();
         // time1 = current_timestamp() - time;
-        printf("time %f \n", endTime - startTime);
+        //printf("time %f \n", endTime - startTime);
+        FILE *writeFile;
+        writeFile = fopen("/home/mpirun/mpi4py_benchmarks/output.txt", "w");
+        fprintf(writeFile, "%f", endTime - startTime);
+
     }
 
     if (rank == 0) {
-        writeToFile(r2, endTime - startTime, M);
-        // printf("%li", time);
+        //FILE *writeFile;
+        //writeFile = fopen("output.txt", "w");
+        //fprintf(writeFile, "%f", endTime - startTime);
+        //writeToFile(r2, endTime - startTime, M);
+         //printf("%f", endTime-startTime);
         // long time = current_timestamp();
         /* for (int ii = 0; ii < M; ++ii) {
             printf("%i ", r2[ii]);
