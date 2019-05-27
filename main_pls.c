@@ -4,10 +4,6 @@
 #include <sys/time.h>
 #include <mpi.h>
 
-//TODO короче в rank == 0 делаем инициализацию, дальше Bcast посылает M N Size может что-то еще..Затем scatter потом recv потом gather результат в rank == 0
-
-//#include <gmpxx.h>
-
 /// to compile: mpicc main.c -o main
 /// to run:     mpirun main
 /// to run with 4 threads: mpiexec --use-hwthread-cpus --n 4 ./main
@@ -21,15 +17,12 @@ struct MyStruct {
 
 
 void writeToFile(int *arrayOfAvg, double time, int M) {
-//void writeToFile(int *arrayOfAvg, double time, int M) {
     int i;
     FILE *writeFile;
     writeFile = fopen("/home/mpirun/mpi4py_benchmarks/output.txt", "w");
     for (i = 0; i < M; i++) {
         fprintf(writeFile, "%d", arrayOfAvg[i]);
         fprintf(writeFile, "%s", "\t");
-        // printf("%d ", arrayOfAvg[i]);
-        // printf("\t");
     }
     fprintf(writeFile, "\n");
     fprintf(writeFile, "%f ", time);
@@ -39,7 +32,7 @@ void writeToFile(int *arrayOfAvg, double time, int M) {
 
 
 struct MyStruct readFromFile() {
-    int n = 0, s = 0, k = 0;
+    int s = 0, k = 0;
     int iterations = 0;
     struct MyStruct result;
     FILE *myFile;
@@ -64,8 +57,6 @@ struct MyStruct readFromFile() {
             iterations++;
         }
         fscanf(myFile, "%i", &Res[i]);
-        // printf("c[%d]=%d  ", i, Res[i]);
-        // printf("\t");
     }
     printf("\n");
     result.res = Res;
@@ -74,43 +65,24 @@ struct MyStruct readFromFile() {
 }
 
 
-void process_data(int rank, int size, int count, int m, const int *pInt, const int *resss, int *r) {
+void process_data(int size, int m, const int *resss, int *r) {
     int summ = 0;
-    // printf("RRRRR %i \n", rank);
-    /*for (int i = 0; i < m / size; i++)
-        for (int i1 = 0; i1 < m; i1++)*/
-            //printf("rank = %i resss[%i]=%i\t\n", rank, i * m + i1, resss[i * m + i1]);
-
     for (int i = 0; i < m / size; i++) {
         summ = 0;
         for (int j = 0; j < m; j++) {
             summ = summ + resss[i * m + j];
         }
         r[i] = summ / m;
-        //printf("r[%i] = %i\n", i, r[i]);
-
     }
 }
-
-
-/*long current_timestamp() {
-    struct timeval te;
-    gettimeofday(&te, NULL);
-    long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
-    return milliseconds;
-}*/
 
 
 int main(int argc, char **argv) {
     int M = 0, rank, size, rc;
     int *res;
-    printf("%i\n",rank);
     int *res2 = NULL;
-    //    long time = 0;
-    //    long time1 = 0;
     double startTime = 0;
     double endTime = 0;
-    //    MPI_WTIME_IS_GLOBAL;
     if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
 
         fprintf(stderr, "Error starting MPI program. Terminating.\n");
@@ -128,7 +100,6 @@ int main(int argc, char **argv) {
     }
 
     MPI_Bcast(&M, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //printf("%i - %i\t\n", M, rank);
     res2 = (int *) malloc((M * M) * sizeof(int));
 
     if (rank == 0) {
@@ -141,8 +112,6 @@ int main(int argc, char **argv) {
         free(res);
     }
 
-    //printf("%i - %i\t\n", M, rank);
-
     MPI_Bcast(res2, M * M, MPI_INT, 0, MPI_COMM_WORLD);
     int *send = (int *) malloc(M * M * sizeof(int));
     int *resss = (int *) malloc(M * M / size * sizeof(int));
@@ -152,22 +121,19 @@ int main(int argc, char **argv) {
 
     if (rank == 0) {
         startTime = MPI_Wtime();
-        // time = current_timestamp();
     }
 
     MPI_Scatter(res2, part_count, MPI_INT, resss, part_count,
                 MPI_INT, 0,
                 MPI_COMM_WORLD);
     // что то сделать с данными
-    process_data(rank, size, part_count, M, send, resss, r);
+    process_data(size, M, resss, r);
 
     MPI_Gather(r, M / size, MPI_INT, r2, M / size,
                MPI_INT, 0,
                MPI_COMM_WORLD);
     if (rank == 0) {
         endTime = MPI_Wtime();
-        // time1 = current_timestamp() - time;
-        //printf("time %f \n", endTime - startTime);
         FILE *writeFile;
         writeFile = fopen("/home/mpirun/mpi4py_benchmarks/output.txt", "w");
         fprintf(writeFile, "%f", endTime - startTime);
@@ -175,16 +141,6 @@ int main(int argc, char **argv) {
     }
 
     if (rank == 0) {
-        //FILE *writeFile;
-        //writeFile = fopen("output.txt", "w");
-        //fprintf(writeFile, "%f", endTime - startTime);
-        //writeToFile(r2, endTime - startTime, M);
-         //printf("%f", endTime-startTime);
-        // long time = current_timestamp();
-        /* for (int ii = 0; ii < M; ++ii) {
-            printf("%i ", r2[ii]);
-        }*/
-        //printf("\n");
         free(res2);
     }
     MPI_Finalize();
