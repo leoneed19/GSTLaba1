@@ -1,19 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <sys/time.h>
-#include <mpi.h>
 
-
-//TODO короче в rank == 0 делаем инициализацию, дальше Bcast посылает M N Size может что-то еще..Затем scatter потом recv потом gather результат в rank == 0
-
-//#include <gmpxx.h>
-
-/// to compile: mpicc main.c -o main
-/// to run:     mpirun main
-/// to run with 4 threads: mpiexec --use-hwthread-cpus --n 4 ./main
-/// to run with 2 threads: mpiexec -np 2 ./main
-
+//  nvcc Cuda.cu -o Cuda; ./Cuda
+// ssh -p 9003 root@samos.dozen.mephi.ru
+// gst2019
 struct MyStruct {
     int m;
     int n;
@@ -21,26 +12,16 @@ struct MyStruct {
 };
 
 
-void writeToFile(int *arrayOfAvg, double time, int M) {
-//void writeToFile(int *arrayOfAvg, double time, int M) {
-    int i;
-    FILE *writeFile;
-    writeFile = fopen("output.txt", "w");
-    for (i = 0; i < M; i++) {
-        fprintf(writeFile, "%d", arrayOfAvg[i]);
-        fprintf(writeFile, "%s", "\t");
-        // printf("%d ", arrayOfAvg[i]);
-        // printf("\t");
-    }
-    fprintf(writeFile, "\n");
-    fprintf(writeFile, "%f ", time);
-    fprintf(writeFile, "\n");
-    fclose(writeFile);
+long current_timestamp() {
+    struct timeval te;
+    gettimeofday(&te, NULL);
+    long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
+    return milliseconds;
 }
 
 
 struct MyStruct readFromFile() {
-    int n = 0, s = 0, k = 0;
+    int s = 0, k = 0;
     int iterations = 0;
     struct MyStruct result;
     FILE *myFile;
@@ -64,7 +45,7 @@ struct MyStruct readFromFile() {
             fscanf(myFile, "%d", &result.n);
             iterations++;
         }
-        fscanf(myFile, "%i", &Res[i]);
+        fscanf(myFile, "%li", &Res[i]);
         // printf("c[%d]=%d  ", i, Res[i]);
         // printf("\t");
     }
@@ -75,112 +56,85 @@ struct MyStruct readFromFile() {
 }
 
 
-void process_data(int rank, int size, int count, int m, const int *pInt, const int *resss, int *r) {
-    int summ = 0;
-    // printf("RRRRR %i \n", rank);
-    /*for (int i = 0; i < m / size; i++)
-        for (int i1 = 0; i1 < m; i1++)*/
-            //printf("rank = %i resss[%i]=%i\t\n", rank, i * m + i1, resss[i * m + i1]);
 
-    for (int i = 0; i < m / size; i++) {
-        summ = 0;
-        for (int j = 0; j < m; j++) {
-            summ = summ + resss[i * m + j];
+__global__ void process(long grid_size, long treads, int *data_set, int M, int *res) {
+
+    long next_column = 0;
+
+    while ((next_column + blockIdx.x * treads + threadIdx.x) <= M) {
+        int *r = &(data_set[M*(next_column + blockIdx.x * treads + threadIdx.x)]);
+
+        int summ = 0;
+        for (int c = 0; c < M; c++) {
+            summ = summ + r[c];
+            //r[c]
+           //avg
         }
-        r[i] = summ / m;
-        //printf("r[%i] = %i\n", i, r[i]);
 
+//        res[next_column + blockIdx.x * treads + threadIdx.x] = summ / M;
+        res[next_column + blockIdx.x * treads + threadIdx.x] = summ / M;
+
+
+        next_column += grid_size * treads;
     }
 }
 
 
-/*long current_timestamp() {
-    struct timeval te;
-    gettimeofday(&te, NULL);
-    long milliseconds = te.tv_sec * 1000LL + te.tv_usec / 1000;
-    return milliseconds;
-}*/
+int main(int argc, char *argv[]) {
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    int *data_set, *dev_data_set, size, res_size, grid_size, treads_size, M = 0;
+    grid_size = atoi(argv[2]);
+    treads_size = atoi(argv[3]);
+
+    struct MyStruct result = readFromFile();
+
+    M = result.m;
+    res_size = M * sizeof(int);
+    printf("M = %i\n", M);
+
+    int *dev_res = (int *) malloc(M * sizeof(int));
+    int *host_res = (int *) malloc(M * sizeof(int));
+
+    data_set = result.res;
+    for (int i=0; i < M; i++){
+        printf("%i\t",data_set[i]);
+    }
+    printf("READ DATA STARTS....\n");
+    size = M * M * sizeof(int);
+    printf("Size %li\n", size);
+
+    // Чтение данных из файла
+    printf("READ DATA ENDS....\n");
+
+    printf("res_size = %i\n", res_size);
+    printf("size = %i\n", size);
+    cudaMalloc(&dev_data_set, size);
+    cudaMalloc(&dev_res, res_size);
+
+    // копируем ввод на device
+    cudaEventRecord(start);
+    cudaMemcpy(dev_data_set, data_set, size, cudaMemcpyHostToDevice);
+    cudaEventRecord(start);
+    process << < grid_size, treads_size >> > (grid_size, treads_size, dev_data_set, M, dev_res);
+
+    cudaEventRecord(stop);
+    // копируем результат работы device обратно на host - копию c
+    cudaMemcpy(data_set, dev_data_set, size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_res, dev_res, res_size, cudaMemcpyDeviceToHost);
+    cudaEventSynchronize(stop);
+    cudaFree(dev_data_set);
+    cudaFree(dev_res);
+    float milliseconds = 0;
+    cudaEventElapsedTime(&milliseconds, start, stop);
 
 
-int main(int argc, char **argv) {
-    int M = 0, rank, size, rc;
-    int *res;
-    int *res2 = NULL;
-    //    long time = 0;
-    //    long time1 = 0;
-    double startTime = 0;
-    double endTime = 0;
-    //    MPI_WTIME_IS_GLOBAL;
-    if ((rc = MPI_Init(&argc, &argv)) != MPI_SUCCESS) {
-
-        fprintf(stderr, "Error starting MPI program. Terminating.\n");
-
-        MPI_Abort(MPI_COMM_WORLD, rc);
+    for (int i = 0; i < 10; i++) {
+        printf("%i\n", host_res[i]);
 
     }
-    /// Возвращает количество процессов в данном коммуникаторе
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
-    /// Возвращает наш ранк
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    if (rank == 0) {
-        struct MyStruct result = readFromFile();
-        M = result.m;
-    }
 
-    MPI_Bcast(&M, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    //printf("%i - %i\t\n", M, rank);
-    res2 = (int *) malloc((M * M) * sizeof(int));
-
-    if (rank == 0) {
-        struct MyStruct result = readFromFile();
-        res = result.res;
-        int i11;
-        for (i11 = 0; i11 < M * M; i11++) {
-            res2[i11] = res[i11];
-        }
-        free(res);
-    }
-
-    //printf("%i - %i\t\n", M, rank);
-
-    MPI_Bcast(res2, M * M, MPI_INT, 0, MPI_COMM_WORLD);
-    int *send = (int *) malloc(M * M * sizeof(int));
-    int *resss = (int *) malloc(M * M / size * sizeof(int));
-    int *r = (int *) malloc(M / size * sizeof(int));
-    int *r2 = (int *) malloc(M * sizeof(int));
-    int part_count = (int) (M * M / size);
-
-    if (rank == 0) {
-        startTime = MPI_Wtime();
-        // time = current_timestamp();
-    }
-
-    MPI_Scatter(res2, part_count, MPI_INT, resss, part_count,
-                MPI_INT, 0,
-                MPI_COMM_WORLD);
-    // что то сделать с данными
-    process_data(rank, size, part_count, M, send, resss, r);
-
-    MPI_Gather(r, M / size, MPI_INT, r2, M / size,
-               MPI_INT, 0,
-               MPI_COMM_WORLD);
-    if (rank == 0) {
-        endTime = MPI_Wtime();
-        // time1 = current_timestamp() - time;
-        printf("time %f \n", endTime - startTime);
-    }
-
-    if (rank == 0) {
-        writeToFile(r2, endTime - startTime, M);
-        // printf("%li", time);
-        // long time = current_timestamp();
-        /* for (int ii = 0; ii < M; ++ii) {
-            printf("%i ", r2[ii]);
-        }*/
-        //printf("\n");
-        free(res2);
-    }
-    MPI_Finalize();
-    //writeToFile(arrayOfAvg, tt, M);
+    printf("time = %f\n", milliseconds);
     return 0;
 }
