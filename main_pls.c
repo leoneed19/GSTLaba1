@@ -45,9 +45,7 @@ struct MyStruct readFromFile() {
             fscanf(myFile, "%d", &result.n);
             iterations++;
         }
-        fscanf(myFile, "%li", &Res[i]);
-        // printf("c[%d]=%d  ", i, Res[i]);
-        // printf("\t");
+        fscanf(myFile, "%i", &Res[i]);
     }
     printf("\n");
     result.res = Res;
@@ -56,25 +54,17 @@ struct MyStruct readFromFile() {
 }
 
 
-
 __global__ void process(long grid_size, long treads, int *data_set, int M, int *res) {
 
     long next_column = 0;
 
     while ((next_column + blockIdx.x * treads + threadIdx.x) <= M) {
         int *r = &(data_set[M*(next_column + blockIdx.x * treads + threadIdx.x)]);
-
         int summ = 0;
         for (int c = 0; c < M; c++) {
             summ = summ + r[c];
-            //r[c]
-           //avg
         }
-
-//        res[next_column + blockIdx.x * treads + threadIdx.x] = summ / M;
         res[next_column + blockIdx.x * treads + threadIdx.x] = summ / M;
-
-
         next_column += grid_size * treads;
     }
 }
@@ -128,7 +118,6 @@ int main(int argc, char *argv[]) {
     cudaFree(dev_res);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
-
 
     for (int i = 0; i < 10; i++) {
         printf("%i\n", host_res[i]);
