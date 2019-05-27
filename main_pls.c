@@ -4,7 +4,6 @@
 #include <sys/time.h>
 #include <mpi.h>
 
-
 //TODO короче в rank == 0 делаем инициализацию, дальше Bcast посылает M N Size может что-то еще..Затем scatter потом recv потом gather результат в rank == 0
 
 //#include <gmpxx.h>
