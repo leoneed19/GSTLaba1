@@ -2,9 +2,13 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-//  nvcc Cuda.cu -o Cuda; ./Cuda
+// nvcc Cuda.cu -o Cuda; ./Cuda
 // ssh -p 9003 root@samos.dozen.mephi.ru
 // gst2019
+
+// scp -P 9003 main_pls.c root@samos.dozen.mephi.ru:fdrv/Cuda.cu
+// scp -P 9003 input.txt root@samos.dozen.mephi.ru:fdrv/input.txt
+
 struct MyStruct {
     int m;
     int n;
